@@ -6,26 +6,163 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Local test</title>
+    <style>
+        .flex {
+            display: flex;
+        }
+
+        .flex-c {
+            display: flex;
+            flex-direction: column;
+            margin-right: .4em;
+        }
+
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            margin-top: .3em;
+        }
+
+        li {
+            background-color: rgb(223, 222, 222);
+        }
+
+        li p {
+            margin-right: .4em;
+        }
+
+        li:nth-child(2n) {
+            background-color: rgb(158, 158, 158);
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Click me</h1>
-    <button id="button">click</button>
-    <p>Clicks:<span id="counter">0</span></p>
+    <h1 id="getDatos">Datos</h1>
+    <div>
+        <h2>Agregar datos</h2>
+        <div class="flex">
+            <div class="flex-c">
+                <p>Caravana</p>
+                <input id="caravana" style="width:4em" type="number" value="0">
+            </div>
+            <div class="flex-c">
+                <p>Tipo</p>
+                <select id="tipo">
+                    <option value="vaca">Vaca</option>
+                    <option value="ternero">Ternero</option>
+                </select>
+            </div>
+
+            <div class="flex-c">
+                <p>Sexo</p>
+                <select id="sexo">
+                    <option value="macho">macho</option>
+                    <option value="hembra">hembra</option>
+                </select>
+            </div>
+
+            <div class="flex-c">
+                <p>Color?</p>
+                <select id="color">
+                    <option value="negra">negra</option>
+                    <option value="colorada">colorada</option>
+                    <option value="barrosa">barrosa</option>
+
+                </select>
+            </div>
+
+            <div class="flex-c">
+                <p>Es pampa?</p>
+                <select id="espampa">
+                    <option value="true">Si</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+
+            <button id="agregar"> Agregar</button>
+        </div>
+
+
+
+    </div>
+    <ul id="lista">
+
+    </ul>
 
     <script>
-        let counter = 0;
-        let button = document.querySelector("#button");
-        let counterLabel = document.querySelector("#counter");
+        const caravanaInput = document.querySelector("#caravana");
+        const tipoInput = document.querySelector("#tipo");
+        const sexoInput = document.querySelector("#sexo");
+        const colorInput = document.querySelector("#color");
+        const espampaInput = document.querySelector("#espampa");
+        const button = document.querySelector("#agregar");
+        const getDatosBtn = document.querySelector('#getDatos');
+        const lista = document.querySelector('#lista');
+
+        const inputs = [caravanaInput, tipoInput, sexoInput, colorInput, espampaInput];
+
+        let datosVacas;
+        fetch('/vacas')
+            .then(response => response.json())
+            .then(data => { datosVacas = data; generarLista() });
+
+        getDatosBtn.addEventListener('click', () => {
+
+            fetch('/vacas')
+                .then(response => response.json())
+                .then(data => { datosVacas = data; console.log(datosVacas); generarLista() });
+
+
+        });
 
         button.addEventListener('click', () => {
-            for (let x = 0; x < 1000; x++) {
-                counter++;
-                counterLabel.textContent = counter;
+            let vaca = {};
+            vaca["caravana"] = parseInt(inputs[0].value);
+            vaca["tipo"] = inputs[1].value;
+            vaca["sexo"] = inputs[2].value;
+            vaca["color"] = inputs[3].value;
+            vaca["esPampa"] = (inputs[4].value === 'true');
 
-                fetch('http://localhost/counter');
-            }
+            fetch('/agregarVaca', {
+
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(vaca),
+            }).then(() => {
+                fetch('/vacas')
+                    .then(response => response.json())
+                    .then(data => { datosVacas = data; console.log(datosVacas); generarLista() });
+
+            })
+
         })
+
+
+        function generarLista() {
+            lista.innerHTML = "";
+            for (let x = 0; x < datosVacas.length; x++) {
+
+                let li = document.createElement('li');
+
+                li.innerHTML = `
+                <li class="flex">
+                    <p>| Carav: <span>${datosVacas[x].caravana}</span>|</p>
+                    <p>Tipo: <span>${datosVacas[x].tipo}</span> |</p>
+                    <p>Sexo: <span>${datosVacas[x].sexo}</span> |</p>
+                    <p>Color: <span>${datosVacas[x].color}</span> |</p>
+                    <p>Pampa: <span>${datosVacas[x].esPampa}</span> |</p>
+                </li>`;
+
+                lista.appendChild(li);
+
+
+            }
+
+        }
 
     </script>
 </body>
